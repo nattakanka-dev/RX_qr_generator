@@ -8,7 +8,8 @@
         /* ส่วนของการตกแต่งหน้าตา (CSS) */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #f4f7f6;
+            /* เปลี่ยนพื้นหลังให้ไล่สีดูทันสมัยขึ้น */
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -16,103 +17,165 @@
             margin: 0;
         }
         .container { 
-            background-color: white;
-            padding: 30px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 40px 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             text-align: center;
-            width: 100%;
-            max-width: 350px;
+            /* ทำให้ Responsive รองรับมือถือ */
+            width: 90%;
+            max-width: 380px;
+            box-sizing: border-box;
         }
-        h2 { color: #003366; margin-bottom: 5px; }
-        .account-info { color: #555; margin-bottom: 20px; font-size: 14px; }
-        label { display: block; text-align: left; margin-bottom: 8px; font-weight: bold; color: #333; }
+        h2 { color: #2c3e50; margin-top: 0; margin-bottom: 10px; font-size: 24px; }
+        .account-info { color: #7f8c8d; margin-bottom: 30px; font-size: 14px; }
+        
+        /* ตกแต่ง Input */
+        label { display: block; text-align: left; margin-bottom: 8px; font-weight: bold; color: #34495e; }
         input[type="number"] { 
             width: 100%; 
-            padding: 12px; 
-            margin-bottom: 20px; 
-            border: 1px solid #ccc; 
-            border-radius: 6px; 
+            padding: 14px; 
+            margin-bottom: 25px; 
+            border: 2px solid #ecf0f1; 
+            border-radius: 10px; 
             box-sizing: border-box; 
-            font-size: 16px; 
+            font-size: 18px; 
+            outline: none;
+            transition: border-color 0.3s;
         }
+        input[type="number"]:focus { border-color: #3498db; }
+
+        /* ตกแต่งปุ่ม (Buttons) */
         button { 
             width: 100%; 
-            padding: 12px; 
-            background-color: #114285; /* สีน้ำเงินสไตล์ธนาคาร */
+            padding: 14px; 
+            background-color: #3498db; 
             color: white; 
             border: none; 
-            border-radius: 6px; 
+            border-radius: 10px; 
             font-size: 16px; 
             font-weight: bold;
             cursor: pointer; 
-            transition: background-color 0.3s;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
         }
-        button:hover { background-color: #0b2e5e; }
-        #qr-result { margin-top: 25px; min-height: 200px; }
-        img { max-width: 100%; border-radius: 8px; }
+        button:hover { background-color: #2980b9; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(52, 152, 219, 0.3); }
+        
+        .btn-secondary { background-color: #ecf0f1; color: #2c3e50; box-shadow: none; }
+        .btn-secondary:hover { background-color: #bdc3c7; box-shadow: none; }
+
+        /* การจัดการซ่อน/แสดงหน้าจอ (Views) */
+        .view { display: none; }
+        .view.active { display: block; /* สร้างภาพเคลื่อนไหวเบาๆ ตอนเปลี่ยนหน้า */ animation: fadeIn 0.4s ease-in-out; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #qr-image-container { margin: 20px 0; min-height: 200px; display: flex; justify-content: center; align-items: center;}
+        img { max-width: 100%; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .qr-amount-display { font-size: 20px; font-weight: bold; color: #27ae60; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>QR Code รับเงิน</h2>
+        <h2>สแกนเพื่อจ่ายเงิน</h2>
         <p class="account-info">บัญชีพร้อมเพย์: <strong id="display-id">กำลังโหลด...</strong></p>
 
-        <label for="amount">จำนวนเงิน (บาท):</label>
-        <input type="number" id="amount" placeholder="เช่น 100.50" step="0.01" min="0.01">
+        <div id="menu-view" class="view active">
+            <button onclick="generateNoAmountQR()">สแกนแบบไม่ระบุจำนวนเงิน</button>
+            <button onclick="switchView('input-view')" class="btn-secondary">สแกนแบบระบุจำนวนเงิน</button>
+        </div>
 
-        <button onclick="generateQR()">สร้าง QR Code</button>
+        <div id="input-view" class="view">
+            <label for="amount">ระบุยอดเงินที่ต้องการ (บาท):</label>
+            <input type="number" id="amount" placeholder="เช่น 100.00" step="0.01" min="0.01">
+            <button onclick="generateWithAmountQR()">สร้าง QR Code</button>
+            <button onclick="switchView('menu-view')" class="btn-secondary">ย้อนกลับ</button>
+        </div>
 
-        <div id="qr-result">
-            </div>
+        <div id="result-view" class="view">
+            <div id="amount-display" class="qr-amount-display"></div>
+            <div id="qr-image-container">
+                </div>
+            <button onclick="switchView('menu-view')" class="btn-secondary">กลับหน้าหลัก</button>
+        </div>
     </div>
 
     <script>
-        /* ส่วนของการทำงาน (JavaScript) 
-           ข้อควรระวัง: แก้ไขเลขบัญชีตรงนี้ให้เป็นของคุณ 
-           (ใช้ได้ทั้งเบอร์มือถือ 10 หลัก หรือ เลขบัตรประชาชน 13 หลัก)
-        */
+        // กำหนดเลขบัญชีพร้อมเพย์ของคุณ
         const myPromptPayID = "0105519003547"; 
-
-        // แสดงเลขบัญชีบนหน้าเว็บ
         document.getElementById("display-id").innerText = myPromptPayID;
 
-        function generateQR() {
-            // 1. ดึงค่าจำนวนเงินที่ผู้ใช้กรอก
-            const amountInput = document.getElementById("amount").value;
-            const qrResultDiv = document.getElementById("qr-result");
+        // ฟังก์ชันสำหรับเปลี่ยนหน้าจอ (สลับ Class 'active')
+        function switchView(viewId) {
+            // ซ่อนทุกหน้าจอ
+            document.getElementById('menu-view').classList.remove('active');
+            document.getElementById('input-view').classList.remove('active');
+            document.getElementById('result-view').classList.remove('active');
+            
+            // แสดงเฉพาะหน้าที่ต้องการ
+            document.getElementById(viewId).classList.add('active');
 
-            // 2. ตรวจสอบความถูกต้องเบื้องต้น (ต้องมีการกรอก และต้องมากกว่า 0)
+            // เคลียร์ค่าในช่องกรอกเงินทุกครั้งที่สลับหน้าจอ
+            if(viewId === 'menu-view') {
+                document.getElementById("amount").value = "";
+                document.getElementById("amount-display").innerText = "";
+            }
+        }
+
+        // ฟังก์ชัน 1: สร้าง QR แบบ "ไม่ระบุจำนวนเงิน"
+        function generateNoAmountQR() {
+            // สร้าง URL แบบไม่มีจำนวนเงินตามหลัง
+            const qrImageUrl = `https://promptpay.io/${myPromptPayID}.png`;
+            
+            document.getElementById("amount-display").innerText = "ให้ผู้โอนระบุยอดเงินเอง";
+            renderQR(qrImageUrl);
+        }
+
+        // ฟังก์ชัน 2: สร้าง QR แบบ "ระบุจำนวนเงิน"
+        function generateWithAmountQR() {
+            const amountInput = document.getElementById("amount").value;
+            
             if (!amountInput || parseFloat(amountInput) <= 0) {
                 alert("กรุณากรอกจำนวนเงินให้ถูกต้องครับ");
                 return;
             }
 
-            // 3. แสดงข้อความสถานะระหว่างรอ
-            qrResultDiv.innerHTML = "<p style='color: #666;'>กำลังสร้าง QR Code...</p>";
-
-            // 4. สร้าง URL สำหรับดึงรูปภาพจาก API
-            // โครงสร้างของ promptpay.io คือ: https://promptpay.io/[เลขบัญชี]/[จำนวนเงิน].png
+            // สร้าง URL แบบมีจำนวนเงิน
             const qrImageUrl = `https://promptpay.io/${myPromptPayID}/${amountInput}.png`;
+            
+            // จัดรูปแบบตัวเลขให้มีคอมม่าและทศนิยม 2 ตำแหน่ง เช่น 1,000.50
+            const formattedAmount = parseFloat(amountInput).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById("amount-display").innerText = `ยอดชำระ: ${formattedAmount} บาท`;
+            
+            renderQR(qrImageUrl);
+        }
 
-            // 5. สร้างแท็ก <img /> เพื่อเตรียมนำรูปมาแสดง
+        // ฟังก์ชันตัวช่วย: โหลดและแสดงรูปภาพ (ลดการเขียนโค้ดซ้ำซ้อน)
+        function renderQR(url) {
+            const qrContainer = document.getElementById("qr-image-container");
+            qrContainer.innerHTML = "<p style='color: #7f8c8d;'>กำลังโหลดรูปภาพ...</p>";
+            
+            // สลับมาหน้าแสดงผลทันทีระหว่างรอรูปโหลด
+            switchView('result-view');
+
             const imgElement = document.createElement("img");
-            imgElement.src = qrImageUrl;
-            imgElement.alt = "QR Code สำหรับโอนเงิน";
+            imgElement.src = url;
+            imgElement.alt = "PromptPay QR Code";
 
-            // 6. เมื่อโหลดรูปภาพสำเร็จ ให้นำไปแปะในกล่องผลลัพธ์
             imgElement.onload = function() {
-                qrResultDiv.innerHTML = ""; // ลบข้อความ "กำลังสร้าง..." ทิ้ง
-                qrResultDiv.appendChild(imgElement); // นำรูปมาใส่แทน
+                qrContainer.innerHTML = ""; 
+                qrContainer.appendChild(imgElement); 
             };
 
-            // 7. จัดการกรณีฉุกเฉิน (เช่น อินเทอร์เน็ตหลุด โหลดรูปไม่ได้)
             imgElement.onerror = function() {
-                qrResultDiv.innerHTML = "<p style='color: red;'>เกิดข้อผิดพลาดในการโหลด QR Code กรุณาลองใหม่อีกครั้งครับ</p>";
+                qrContainer.innerHTML = "<p style='color: #e74c3c;'>โหลดรูปภาพไม่สำเร็จ กรุณาลองใหม่</p>";
             };
         }
     </script>
-
 </body>
 </html>
