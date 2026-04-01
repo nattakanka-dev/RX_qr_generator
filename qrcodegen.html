@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบสร้าง QR Code รับเงิน</title>
+    <style>
+        /* ส่วนของการตกแต่งหน้าตา (CSS) */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container { 
+            background-color: white;
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 350px;
+        }
+        h2 { color: #003366; margin-bottom: 5px; }
+        .account-info { color: #555; margin-bottom: 20px; font-size: 14px; }
+        label { display: block; text-align: left; margin-bottom: 8px; font-weight: bold; color: #333; }
+        input[type="number"] { 
+            width: 100%; 
+            padding: 12px; 
+            margin-bottom: 20px; 
+            border: 1px solid #ccc; 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-size: 16px; 
+        }
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            background-color: #114285; /* สีน้ำเงินสไตล์ธนาคาร */
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            font-size: 16px; 
+            font-weight: bold;
+            cursor: pointer; 
+            transition: background-color 0.3s;
+        }
+        button:hover { background-color: #0b2e5e; }
+        #qr-result { margin-top: 25px; min-height: 200px; }
+        img { max-width: 100%; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>QR Code รับเงิน</h2>
+        <p class="account-info">บัญชีพร้อมเพย์: <strong id="display-id">กำลังโหลด...</strong></p>
+
+        <label for="amount">จำนวนเงิน (บาท):</label>
+        <input type="number" id="amount" placeholder="เช่น 100.50" step="0.01" min="0.01">
+
+        <button onclick="generateQR()">สร้าง QR Code</button>
+
+        <div id="qr-result">
+            </div>
+    </div>
+
+    <script>
+        /* ส่วนของการทำงาน (JavaScript) 
+           ข้อควรระวัง: แก้ไขเลขบัญชีตรงนี้ให้เป็นของคุณ 
+           (ใช้ได้ทั้งเบอร์มือถือ 10 หลัก หรือ เลขบัตรประชาชน 13 หลัก)
+        */
+        const myPromptPayID = "0105519003547"; 
+
+        // แสดงเลขบัญชีบนหน้าเว็บ
+        document.getElementById("display-id").innerText = myPromptPayID;
+
+        function generateQR() {
+            // 1. ดึงค่าจำนวนเงินที่ผู้ใช้กรอก
+            const amountInput = document.getElementById("amount").value;
+            const qrResultDiv = document.getElementById("qr-result");
+
+            // 2. ตรวจสอบความถูกต้องเบื้องต้น (ต้องมีการกรอก และต้องมากกว่า 0)
+            if (!amountInput || parseFloat(amountInput) <= 0) {
+                alert("กรุณากรอกจำนวนเงินให้ถูกต้องครับ");
+                return;
+            }
+
+            // 3. แสดงข้อความสถานะระหว่างรอ
+            qrResultDiv.innerHTML = "<p style='color: #666;'>กำลังสร้าง QR Code...</p>";
+
+            // 4. สร้าง URL สำหรับดึงรูปภาพจาก API
+            // โครงสร้างของ promptpay.io คือ: https://promptpay.io/[เลขบัญชี]/[จำนวนเงิน].png
+            const qrImageUrl = `https://promptpay.io/${myPromptPayID}/${amountInput}.png`;
+
+            // 5. สร้างแท็ก <img /> เพื่อเตรียมนำรูปมาแสดง
+            const imgElement = document.createElement("img");
+            imgElement.src = qrImageUrl;
+            imgElement.alt = "QR Code สำหรับโอนเงิน";
+
+            // 6. เมื่อโหลดรูปภาพสำเร็จ ให้นำไปแปะในกล่องผลลัพธ์
+            imgElement.onload = function() {
+                qrResultDiv.innerHTML = ""; // ลบข้อความ "กำลังสร้าง..." ทิ้ง
+                qrResultDiv.appendChild(imgElement); // นำรูปมาใส่แทน
+            };
+
+            // 7. จัดการกรณีฉุกเฉิน (เช่น อินเทอร์เน็ตหลุด โหลดรูปไม่ได้)
+            imgElement.onerror = function() {
+                qrResultDiv.innerHTML = "<p style='color: red;'>เกิดข้อผิดพลาดในการโหลด QR Code กรุณาลองใหม่อีกครั้งครับ</p>";
+            };
+        }
+    </script>
+
+</body>
+</html>
